@@ -38,5 +38,5 @@ fn main() {
     // Convert durations to milliseconds for easier comparison
     let ms = duration.as_secs_f64() * 1000.0;
 
-    println!("For n={} we found {} primes in {:.2}", n, total_primes, ms)
+    println!("For n={} we found {} primes in {:.2} ms.", n, total_primes, ms)
 }
