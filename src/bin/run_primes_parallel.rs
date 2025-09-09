@@ -52,71 +52,69 @@ fn is_prime(n: u64) -> bool {
 }
 
 fn main() {
-    for value in (100_000..=10_000_000).step_by(100_000) {
-        // Upper limit for prime search
-        let n: u64 = value;
-        // println!("Finding primes to {} ..", n);
+    // Upper limit for prime search
+    let n: u64 = 1_200_000;
+    println!("Finding primes to {} ..", n);
 
-        // Threads count primes using parallel approach
-        let num_threads: usize = num_cpus::get();
-        // println!("Using {} threads.", num_threads);
+    // Threads count primes using parallel approach
+    let num_threads: usize = num_cpus::get();
+    println!("Using {} threads.", num_threads);
 
-        // Calculate chunk size for each thread
-        let chunk_size = (n as usize / num_threads) + 1;
-        // println!("Chunk size: {}.", chunk_size);
+    // Calculate chunk size for each thread
+    let chunk_size = (n as usize / num_threads) + 1;
+    println!("Chunk size: {}.", chunk_size);
 
-        // Record the start time for performance measurement
-        let start = Instant::now();
+    // Record the start time for performance measurement
+    let start = Instant::now();
 
-        // Spawn threads to count primes in parallel.
-        let mut handles = Vec::with_capacity(num_threads);
+    // Spawn threads to count primes in parallel.
+    let mut handles = Vec::with_capacity(num_threads);
 
-        // For each thread, assign a chunk of the range to process.
-        // This loop divides the total range [2, n] into `num_threads` chunks.
-        // Each thread will:
-        //   1. Receive its own start and end indices.
-        //   2. Count the number of primes in its assigned chunk.
-        //   3. Return the count to the main thread.
-        for i in 0..num_threads {
-            // Start index for this thread's chunk (starts at 2)
-            let start = i * chunk_size + 2;
+    // For each thread, assign a chunk of the range to process.
+    // This loop divides the total range [2, n] into `num_threads` chunks.
+    // Each thread will:
+    //   1. Receive its own start and end indices.
+    //   2. Count the number of primes in its assigned chunk.
+    //   3. Return the count to the main thread.
+    for i in 0..num_threads {
+        // Start index for this thread's chunk (starts at 2)
+        let start = i * chunk_size + 2;
 
-            // End index for this thread's chunk (capped at n)
-            let end = ((i + 1) * chunk_size + 1).min(n as usize);
+        // End index for this thread's chunk (capped at n)
+        let end = ((i + 1) * chunk_size + 1).min(n as usize);
 
-            // Spawn a new thread to process this chunk.
-            // The thread executes the closure, counting primes in [start, end].
-            let handle = std::thread::spawn(move || {
-                let mut count = 0;
-                // Iterate through the assigned chunk and count primes.
-                for num in start..=end {
-                    if is_prime(num as u64) {
-                        count += 1;
-                    }
+        // Spawn a new thread to process this chunk.
+        // The thread executes the closure, counting primes in [start, end].
+        let handle = std::thread::spawn(move || {
+            let mut count = 0;
+            // Iterate through the assigned chunk and count primes.
+            for num in start..=end {
+                if is_prime(num as u64) {
+                    count += 1;
                 }
-                return count;
-            });
-            // Store the thread handle for later joining.
-            handles.push(handle);
-        }
-
-        // Collect results from all threads.
-        // Each thread returns its count, which is summed to get the total.
-        let mut total_primes = 0;
-        for handle in handles {
-            // Join each thread and add its result to the total.
-            total_primes += handle.join().unwrap();
-        }
-
-        // Measure elapsed time for the naive prime counting
-        let duration = start.elapsed();
-
-        // Convert durations to milliseconds for easier comparison
-        let ms = duration.as_secs_f64() * 1000.0;
-
-        println!(
-            "For n={} we found {} primes in {:.2} ms.",
-            n, total_primes, ms
-        )
+            }
+            return count;
+        });
+        // Store the thread handle for later joining.
+        handles.push(handle);
     }
+
+    // Collect results from all threads.
+    // Each thread returns its count, which is summed to get the total.
+    let mut total_primes = 0;
+    for handle in handles {
+        // Join each thread and add its result to the total.
+        total_primes += handle.join().unwrap();
+    }
+
+    // Measure elapsed time for the naive prime counting
+    let duration = start.elapsed();
+
+    // Convert durations to milliseconds for easier comparison
+    let ms = duration.as_secs_f64() * 1000.0;
+
+    println!(
+        "For n={} we found {} primes in {:.2} ms.",
+        n, total_primes, ms
+    )
 }
